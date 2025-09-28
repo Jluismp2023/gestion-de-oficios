@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Oficio</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f8f9fa; color: #333; margin: 0; padding: 2em; }
+        .container { max-width: 700px; margin: auto; background: #ffffff; padding: 2em; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+        h1 { color: #0056b3; border-bottom: 2px solid #dee2e6; padding-bottom: 10px; margin-bottom: 1em; }
+        form { display: flex; flex-direction: column; }
+        label { margin-top: 1em; margin-bottom: 0.5em; font-weight: 600; }
+        input[type="text"], input[type="date"], select, textarea { padding: 12px; border: 1px solid #ced4da; border-radius: 6px; font-size: 1rem; }
+        input[type="file"] { padding: 8px; border: 1px solid #ced4da; border-radius: 6px; }
+        button[type="submit"] { margin-top: 1.5em; padding: 12px 20px; background-color: #007bff; color: white; font-size: 1.1rem; border: none; border-radius: 6px; cursor: pointer; }
+        .back-link { display: inline-block; margin-top: 1.5em; color: #007bff; text-decoration: none; font-weight: 600; }
+        .current-file { font-style: italic; color: #6c757d; margin-top: 5px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Editar Oficio</h1>
+        <form method="post" enctype="multipart/form-data">
+            <label for="numero_oficio">Numero de Oficio:</label>
+            <input type="text" id="numero_oficio" name="numero_oficio" value="{{ oficio['numero_oficio'] }}">
+            
+            <label for="tipo">Tipo:</label>
+            <select id="tipo" name="tipo">
+                <option value="enviado" {% if oficio['tipo'] == 'enviado' %}selected{% endif %}>Enviado</option>
+                <option value="recibido" {% if oficio['tipo'] == 'recibido' %}selected{% endif %}>Recibido</option>
+            </select>
+
+            <label for="fecha">FECHA:</label>
+            <input type="date" id="fecha" name="fecha" value="{{ oficio['fecha'] }}" required>
+
+            <label for="remitente">Remitente (Quién envía o elabora):</label>
+            <input type="text" id="remitente" name="remitente" value="{{ oficio['remitente'] }}" required>
+
+            <label for="destinatario">DIRIGIDO A:</label>
+            <input type="text" id="destinatario" name="destinatario" value="{{ oficio['destinatario'] }}" required>
+
+            <label for="asunto">ASUNTO:</label>
+            <input type="text" id="asunto" name="asunto" value="{{ oficio['asunto'] }}" required>
+
+            <label for="cuerpo">Cuerpo del Oficio:</label>
+            <textarea id="cuerpo" name="cuerpo" rows="5" required>{{ oficio['cuerpo'] }}</textarea>
+
+            <label for="estado">Estado:</label>
+            <select id="estado" name="estado">
+                {% if oficio['tipo'] == 'enviado' %}
+                    <option value="Enviado" selected>Enviado</option>
+                {% else %}
+                    <option value="Pendiente" {% if oficio['estado'] == 'Pendiente' %}selected{% endif %}>Pendiente</option>
+                    <option value="Leído" {% if oficio['estado'] == 'Leído' %}selected{% endif %}>Leído</option>
+                    <option value="Respondido" {% if oficio['estado'] == 'Respondido' %}selected{% endif %}>Respondido</option>
+                {% endif %}
+            </select>
+
+            <label for="observaciones">Observaciones:</label>
+            <textarea id="observaciones" name="observaciones" rows="3">{{ oficio['observaciones'] }}</textarea>
+
+            <label for="archivo_adjunto">Añadir más Archivos:</label>
+            {% if oficio['archivo_adjunto'] %}
+                <p class="current-file"><b>Archivos actuales:</b> 
+                {% for filename in oficio['archivo_adjunto'].split(',') %}
+                    {% if filename %}{{ filename }}{% if not loop.last %}, {% endif %}{% endif %}
+                {% endfor %}
+                </p>
+            {% endif %}
+            <input type="file" id="archivo_adjunto" name="archivo_adjunto" multiple>
+            <input type="hidden" name="archivos_actuales" value="{{ oficio['archivo_adjunto'] or '' }}">
+
+            <button type="submit">Guardar Cambios</button>
+        </form>
+        <a href="{{ url_for('index') }}" class="back-link">Cancelar y volver a la lista</a>
+    </div>
+</body>
+</html>

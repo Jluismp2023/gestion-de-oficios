@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agregar Oficio</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f8f9fa; color: #333; margin: 0; padding: 2em; }
+        .container { max-width: 700px; margin: auto; background: #ffffff; padding: 2em; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+        h1 { color: #0056b3; border-bottom: 2px solid #dee2e6; padding-bottom: 10px; margin-bottom: 1em; }
+        form { display: flex; flex-direction: column; }
+        label { margin-top: 1em; margin-bottom: 0.5em; font-weight: 600; }
+        input[type="text"], input[type="date"], select, textarea { padding: 12px; border: 1px solid #ced4da; border-radius: 6px; font-size: 1rem; }
+        input[type="file"] { padding: 8px; border: 1px solid #ced4da; border-radius: 6px; }
+        button[type="submit"] { margin-top: 1.5em; padding: 12px 20px; background-color: #007bff; color: white; font-size: 1.1rem; border: none; border-radius: 6px; cursor: pointer; }
+        .back-link { display: inline-block; margin-top: 1.5em; color: #007bff; text-decoration: none; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Agregar Nuevo Oficio</h1>
+        <form method="post" enctype="multipart/form-data">
+            <label for="numero_oficio">Numero de Oficio:</label>
+            <input type="text" id="numero_oficio" name="numero_oficio">
+
+            <label for="tipo">Tipo:</label>
+            <select id="tipo" name="tipo">
+                <option value="enviado">Enviado</option>
+                <option value="recibido">Recibido</option>
+            </select>
+
+            <label for="fecha">FECHA:</label>
+            <input type="date" id="fecha" name="fecha" required>
+
+            <label for="remitente">Remitente (Quién envía o elabora):</label>
+            <input type="text" id="remitente" name="remitente" required>
+
+            <label for="destinatario">DIRIGIDO A:</label>
+            <input type="text" id="destinatario" name="destinatario" required>
+
+            <label for="asunto">ASUNTO:</label>
+            <input type="text" id="asunto" name="asunto" required>
+
+            <label for="cuerpo">Cuerpo del Oficio:</label>
+            <textarea id="cuerpo" name="cuerpo" rows="5" required></textarea>
+
+            <label for="observaciones">Observaciones:</label>
+            <textarea id="observaciones" name="observaciones" rows="3"></textarea>
+            
+            <label for="archivo_adjunto">Adjuntar Archivo(s):</label>
+            <input type="file" id="archivo_adjunto" name="archivo_adjunto" multiple>
+
+            <button type="submit">Guardar Oficio</button>
+        </form>
+        <a href="{{ url_for('index') }}" class="back-link">Volver a la lista</a>
+    </div>
+</body>
+</html>

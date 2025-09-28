@@ -1,0 +1,12 @@
+# Entorno virtual
+venv/
+
+# Archivos de cache de Python
+__pycache__/
+*.pyc
+
+# Base de datos (para no subir los datos de prueba)
+oficios.db
+
+# Archivos subidos por los usuarios
+uploads/

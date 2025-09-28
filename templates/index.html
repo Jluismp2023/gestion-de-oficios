@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Oficios</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f8f9fa; color: #333; margin: 0; padding: 2em; }
+        .container { max-width: 1500px; margin: auto; background: #ffffff; padding: 2em; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #dee2e6; padding-bottom: 10px; margin-bottom: 1.5em; }
+        h1 { color: #0056b3; margin: 0; }
+        h2 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .btn-primary { background-color: #007bff; color: white; padding: 10px 18px; text-decoration: none; border-radius: 6px; font-weight: 600; }
+        .btn-print { background-color: #6c757d; color: white; padding: 10px 18px; text-decoration: none; border-radius: 6px; font-weight: 600; cursor: pointer; border: none; margin-left: 10px; }
+        .header-buttons { display: flex; }
+        .search-form { margin-bottom: 2em; display: flex; gap: 10px; }
+        .search-form input { flex-grow: 1; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; font-size: 1rem; }
+        .search-form button { padding: 10px 20px; background-color: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 30px; }
+        th, td { border: 1px solid #dee2e6; padding: 12px; text-align: left; vertical-align: middle; }
+        th { background-color: #f2f2f2; font-weight: 600; }
+        .actions { white-space: nowrap; width: 1%; }
+        .actions a, .actions button { padding: 6px 12px; color: white; border: none; border-radius: 5px; text-decoration: none; cursor: pointer; font-size: 0.9rem; margin-right: 5px; }
+        .actions .btn-edit { background-color: #28a745; }
+        .actions .btn-delete { background-color: #dc3545; }
+        .btn-download { background-color: #17a2b8; color: white; padding: 4px 8px; font-size: 0.8rem; text-decoration: none; border-radius: 4px; display: inline-block; margin-bottom: 4px; margin-right: 4px; }
+        .print-header, .print-footer { display: none; }
+        .report-summary { margin-top: -10px; margin-bottom: 20px; font-style: italic; color: #555; }
+
+        @media print {
+            @page {
+                size: landscape;
+                counter-increment: page;
+                @bottom-center {
+                    content: "Página " counter(page);
+                }
+            }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 10pt; background-color: #fff; margin: 1cm; color: #000; }
+            .container { box-shadow: none; border: none; padding: 0; width: 100%; max-width: 100%; }
+            .header, .search-form, .actions { display: none !important; }
+            .print-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+            .print-header .logo-container { display: flex; align-items: center; gap: 20px; }
+            .print-header .logo-container img { max-height: 100px; width: auto; }
+            .print-header .company-name { font-size: 18pt; font-weight: bold; margin-bottom: 5px; }
+            .print-header .report-title { font-size: 12pt; }
+            .print-header .report-date { text-align: right; font-size: 10pt; }
+            table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+            th, td { border: 1px solid #666; padding: 6px; color: #000 !important; page-break-inside: avoid; }
+            thead { display: table-header-group; }
+            h2 { font-size: 14pt; color: #000 !important; border: none; margin-top: 30px; page-break-after: avoid; }
+            .report-summary { font-size: 11pt; margin-top: 5px; margin-bottom: 15px; }
+            .print-footer { display: block; position: fixed; bottom: 0; left: 0; right: 0; text-align: center; font-size: 9pt; border-top: 1px solid #000; padding-top: 5px; }
+            a.btn-download { text-decoration: none; color: #000 !important; background: none; padding: 0; border: none; }
+            tbody tr:nth-child(even) { background-color: #f2f2f2 !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="print-header">
+            <div class="logo-container">
+                <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo de la Empresa">
+                <div>
+                    <div class="company-name">CONSORCIO GENERAL GALLARDO PASAJE</div>
+                    <div class="report-title">Reporte de Gestión de Oficios</div>
+                </div>
+            </div>
+            <div class="report-date" id="print-date"></div>
+        </div>
+        
+        <div class="header">
+            <h1>Gestión de Oficios</h1>
+            <div class="header-buttons">
+                <a href="{{ url_for('agregar') }}" class="btn-primary">Agregar Nuevo Oficio</a>
+                <button onclick="window.print();" class="btn-print">🖨️ Imprimir Reporte</button>
+            </div>
+        </div>
+        
+        <form class="search-form" method="get" action="{{ url_for('index') }}">
+            <input type="text" name="q" placeholder="Buscar por No. Oficio, Asunto, Remitente..." value="{{ search_query }}">
+            <button type="submit">Buscar</button>
+        </form>
+
+        <h2>📤 Oficios Enviados</h2>
+        <div class="report-summary">Total de registros: {{ total_enviados }}</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Numero de Oficio</th>
+                    <th>FECHA</th>
+                    <th>ASUNTO</th>
+                    <th>DIRIGIDO A:</th>
+                    <th>ELABORADO POR:</th>
+                    <th>Observaciones</th>
+                    <th>Archivos</th>
+                    <th class="actions">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for oficio in oficios_enviados %}
+                <tr>
+                    <td>{{ oficio['id'] }}</td>
+                    <td>{{ oficio['numero_oficio'] }}</td>
+                    <td>{{ oficio['fecha'] }}</td>
+                    <td>{{ oficio['asunto'] }}</td>
+                    <td>{{ oficio['destinatario'] }}</td>
+                    <td>{{ oficio['remitente'] }}</td>
+                    <td>{{ oficio['observaciones'] }}</td>
+                    <td>
+                        {% if oficio['archivo_adjunto'] %}
+                            {% for filename in oficio['archivo_adjunto'].split(',') %}{% if filename %}<a href="{{ url_for('uploaded_file', filename=filename) }}" class="btn-download" target="_blank">{{ filename }}</a>{% endif %}{% endfor %}
+                        {% else %}N/A{% endif %}
+                    </td>
+                    <td class="actions">
+                        <a href="{{ url_for('editar', id=oficio['id']) }}" class="btn-edit">Editar</a>
+                        <form method="post" action="{{ url_for('eliminar', id=oficio['id']) }}" onsubmit="return confirm('¿Estás seguro?');" style="display:inline;"><button type="submit" class="btn-delete">Eliminar</button></form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="9">No hay oficios enviados.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>📥 Oficios Recibidos</h2>
+        <div class="report-summary">Total de registros: {{ total_recibidos }}</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Numero de Oficio</th>
+                    <th>FECHA</th>
+                    <th>ASUNTO</th>
+                    <th>DIRIGIDO A:</th>
+                    <th>ENVIADO POR:</th>
+                    <th>Observaciones</th>
+                    <th>Archivos</th>
+                    <th class="actions">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for oficio in oficios_recibidos %}
+                <tr>
+                    <td>{{ oficio['id'] }}</td>
+                    <td>{{ oficio['numero_oficio'] }}</td>
+                    <td>{{ oficio['fecha'] }}</td>
+                    <td>{{ oficio['asunto'] }}</td>
+                    <td>{{ oficio['destinatario'] }}</td>
+                    <td>{{ oficio['remitente'] }}</td>
+                    <td>{{ oficio['observaciones'] }}</td>
+                    <td>
+                        {% if oficio['archivo_adjunto'] %}
+                            {% for filename in oficio['archivo_adjunto'].split(',') %}{% if filename %}<a href="{{ url_for('uploaded_file', filename=filename) }}" class="btn-download" target="_blank">{{ filename }}</a>{% endif %}{% endfor %}
+                        {% else %}N/A{% endif %}
+                    </td>
+                    <td class="actions">
+                        <a href="{{ url_for('editar', id=oficio['id']) }}" class="btn-edit">Editar</a>
+                        <form method="post" action="{{ url_for('eliminar', id=oficio['id']) }}" onsubmit="return confirm('¿Estás seguro?');" style="display:inline;"><button type="submit" class="btn-delete">Eliminar</button></form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="9">No hay oficios recibidos.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="print-footer">
+            Reporte generado automáticamente por el Sistema de Gestión de Oficios.
+        </div>
+    </div>
+    <script>
+        const hoy = new Date();
+        const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('print-date').textContent = 'Fecha de Emisión: ' + hoy.toLocaleDateString('es-EC', opciones);
+    </script>
+</body>
+</html>
