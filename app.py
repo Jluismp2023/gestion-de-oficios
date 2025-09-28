@@ -11,6 +11,7 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 def allowed_file(filename):
+    """Verifica si la extensión del archivo es permitida."""
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -18,19 +19,22 @@ def allowed_file(filename):
 DATABASE = 'oficios.db'
 
 def get_db():
+    """Conecta a la base de datos si no hay una conexión existente."""
     db = getattr(g, '_database', None)
     if db is None:
         db = g._database = sqlite3.connect(DATABASE)
-        db.row_factory = sqlite3.Row
+        db.row_factory = sqlite3.Row  # Permite acceder a los datos por nombre de columna
     return db
 
 @app.teardown_appcontext
 def close_connection(exception):
+    """Cierra la conexión a la base de datos al final de la solicitud."""
     db = getattr(g, '_database', None)
     if db is not None:
         db.close()
 
 def init_db():
+    """Inicializa la base de datos y crea la tabla si no existe."""
     with app.app_context():
         db = get_db()
         cursor = db.cursor()
@@ -54,6 +58,7 @@ def init_db():
 # --- Rutas de la aplicación ---
 @app.route('/')
 def index():
+    """Página principal que muestra los oficios enviados y recibidos."""
     db = get_db()
     cursor = db.cursor()
     search_query = request.args.get('q', '')
@@ -61,6 +66,7 @@ def index():
     search_clause = "AND (asunto LIKE ? OR remitente LIKE ? OR destinatario LIKE ? OR numero_oficio LIKE ?)"
     search_params = ('%' + search_query + '%', '%' + search_query + '%', '%' + search_query + '%', '%' + search_query + '%')
 
+    # Consulta para oficios recibidos
     query_recibidos = "SELECT * FROM oficios WHERE tipo = 'recibido' "
     if search_query:
         query_recibidos += search_clause
@@ -69,6 +75,7 @@ def index():
         cursor.execute(query_recibidos + "ORDER BY fecha DESC")
     oficios_recibidos = cursor.fetchall()
 
+    # Consulta para oficios enviados
     query_enviados = "SELECT * FROM oficios WHERE tipo = 'enviado' "
     if search_query:
         query_enviados += search_clause
@@ -89,6 +96,7 @@ def index():
 
 @app.route('/agregar', methods=['GET', 'POST'])
 def agregar():
+    """Ruta para agregar un nuevo oficio."""
     if request.method == 'POST':
         archivos_guardados = []
         files = request.files.getlist('archivo_adjunto')
@@ -125,6 +133,7 @@ def agregar():
 
 @app.route('/editar/<int:id>', methods=['GET', 'POST'])
 def editar(id):
+    """Ruta para editar un oficio existente."""
     db = get_db()
     cursor = db.cursor()
     if request.method == 'POST':
@@ -167,6 +176,7 @@ def editar(id):
 
 @app.route('/eliminar/<int:id>', methods=['POST'])
 def eliminar(id):
+    """Ruta para eliminar un oficio y sus archivos adjuntos."""
     db = get_db()
     cursor = db.cursor()
     
@@ -187,17 +197,12 @@ def eliminar(id):
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
+    """Ruta para servir y permitir la descarga de los archivos subidos."""
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 if __name__ == '__main__':
+    # Este bloque solo se ejecuta cuando corres `py app.py` directamente
     if not os.path.exists(UPLOAD_FOLDER):
         os.makedirs(UPLOAD_FOLDER)
     init_db()
-# Al final de app.py
-if __name__ == '__main__':
-    if not os.path.exists(UPLOAD_FOLDER):
-        os.makedirs(UPLOAD_FOLDER)
-    init_db()
-    # Usamos waitress para pruebas locales, Render usará gunicorn
-    from waitress import serve
-    serve(app, host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', debug=True)
